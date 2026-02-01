@@ -250,5 +250,225 @@ class TestEDA(unittest.TestCase):
         mock_plt.show.assert_called_once()
 
 
+class TestEDAPivotTableAll(unittest.TestCase):
+
+    def setUp(self):
+        """Set up a sample DataFrame for testing pivot_table_all."""
+        self.eda = EDA()
+        self.df = pd.DataFrame({
+            'category': ['A', 'A', 'B', 'B', 'C', 'C'] * 3,
+            'target': [0, 1, 0, 1, 0, 1] * 3,
+            'value1': np.random.rand(18) * 100,
+            'value2': np.random.rand(18) * 50,
+            'non_numeric': ['x', 'y'] * 9
+        })
+
+    @patch('VKPyKit.EDA.plt')
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_pivot_table_all_default_behavior(self, mock_html, mock_display, mock_plt):
+        """Test pivot_table_all with default parameters."""
+        result = self.eda.pivot_table_all(data=self.df, target='target', printall=True)
+
+        # Should return a dictionary
+        self.assertIsInstance(result, dict)
+        
+        # Should have entries for numeric columns (value1, value2) but not target itself
+        self.assertIn('value1', result)
+        self.assertIn('value2', result)
+        self.assertNotIn('target', result)
+        self.assertNotIn('non_numeric', result)
+        
+        # Each entry should be a DataFrame
+        for key in result:
+            self.assertIsInstance(result[key], pd.DataFrame)
+        
+        # Display and HTML should be called for output
+        self.assertTrue(mock_display.called)
+        self.assertTrue(mock_html.called)
+
+    @patch('VKPyKit.EDA.plt')
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_pivot_table_all_with_predictors(self, mock_html, mock_display, mock_plt):
+        """Test pivot_table_all with specified predictors."""
+        predictors = ['value1']
+        result = self.eda.pivot_table_all(
+            data=self.df, 
+            target='target', 
+            predictors=predictors, 
+            printall=False
+        )
+
+        # Should only have value1
+        self.assertEqual(len(result), 1)
+        self.assertIn('value1', result)
+        self.assertNotIn('value2', result)
+
+    @patch('VKPyKit.EDA.plt')
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_pivot_table_all_custom_stats(self, mock_html, mock_display, mock_plt):
+        """Test pivot_table_all with custom statistics."""
+        custom_stats = ['mean', 'median']
+        result = self.eda.pivot_table_all(
+            data=self.df, 
+            target='target', 
+            stats=custom_stats,
+            printall=False
+        )
+
+        # Check that pivot tables have the correct statistics
+        for key in result:
+            # Columns should be the custom stats
+            self.assertTrue(all(stat in result[key].columns for stat in custom_stats))
+
+    @patch('VKPyKit.EDA.plt')
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_pivot_table_all_with_chart_type(self, mock_html, mock_display, mock_plt):
+        """Test pivot_table_all with chart generation."""
+        mock_plot = MagicMock()
+        
+        # Call with chart_type
+        result = self.eda.pivot_table_all(
+            data=self.df, 
+            target='target', 
+            chart_type='bar',
+            printall=True
+        )
+
+        # plt.show should be called (for charts and boxplots)
+        self.assertTrue(mock_plt.show.called)
+        # Should have called display for showing charts
+        self.assertTrue(mock_display.called)
+
+    @patch('VKPyKit.EDA.plt')
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_pivot_table_all_printall_false(self, mock_html, mock_display, mock_plt):
+        """Test pivot_table_all with printall=False."""
+        result = self.eda.pivot_table_all(
+            data=self.df, 
+            target='target', 
+            printall=False
+        )
+
+        # Should still return dictionary
+        self.assertIsInstance(result, dict)
+        
+        # Display should not be called when printall=False
+        mock_display.assert_not_called()
+        mock_html.assert_not_called()
+
+    @patch('VKPyKit.EDA.plt')
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_pivot_table_all_return_structure(self, mock_html, mock_display, mock_plt):
+        """Test that pivot_table_all returns correct dictionary structure."""
+        result = self.eda.pivot_table_all(
+            data=self.df, 
+            target='target',
+            printall=False
+        )
+
+        # Verify structure
+        for predictor, pivot_df in result.items():
+            # Each value should be a DataFrame
+            self.assertIsInstance(pivot_df, pd.DataFrame)
+            # Index should be target values
+            self.assertIsInstance(pivot_df.index, pd.Index)
+
+
+class TestEDAOverview(unittest.TestCase):
+
+    def setUp(self):
+        """Set up sample DataFrames for testing overview."""
+        self.eda = EDA()
+        self.df = pd.DataFrame({
+            'numeric1': [1, 2, 3, 4, 5],
+            'numeric2': [10, 20, 30, 40, 50],
+            'category': ['A', 'B', 'C', 'D', 'E'],
+            'text': ['hello', 'world', 'test', 'data', 'frame']
+        })
+
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_overview_default_behavior(self, mock_html, mock_display):
+        """Test overview with default printall=True."""
+        result = self.eda.overview(data=self.df, printall=True)
+
+        # Should return a DataFrame
+        self.assertIsInstance(result, pd.DataFrame)
+        
+        # Should have expected columns
+        expected_cols = ['number of rows', 'number of columns', 
+                        'number of missing values', 'number of duplicates']
+        for col in expected_cols:
+            self.assertIn(col, result.columns)
+        
+        # Check values
+        self.assertEqual(result['number of rows'].iloc[0], 5)
+        self.assertEqual(result['number of columns'].iloc[0], 4)
+        
+        # Display and HTML should be called multiple times for different sections
+        self.assertTrue(mock_display.called)
+        self.assertTrue(mock_html.called)
+
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_overview_return_values(self, mock_html, mock_display):
+        """Test that overview returns DataFrame with correct information."""
+        result = self.eda.overview(data=self.df, printall=False)
+
+        # Verify the returned DataFrame structure
+        self.assertEqual(len(result), 1)  # Should have one row
+        self.assertEqual(result['number of rows'].iloc[0], self.df.shape[0])
+        self.assertEqual(result['number of columns'].iloc[0], self.df.shape[1])
+        self.assertEqual(result['number of missing values'].iloc[0], 0)
+        self.assertEqual(result['number of duplicates'].iloc[0], 0)
+
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_overview_with_missing_values(self, mock_html, mock_display):
+        """Test overview on dataset with missing values."""
+        df_with_missing = self.df.copy()
+        df_with_missing.loc[0, 'numeric1'] = np.nan
+        df_with_missing.loc[1, 'category'] = np.nan
+        
+        result = self.eda.overview(data=df_with_missing, printall=False)
+
+        # Should detect 2 missing values
+        self.assertEqual(result['number of missing values'].iloc[0], 2)
+
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_overview_with_duplicates(self, mock_html, mock_display):
+        """Test overview on dataset with duplicate rows."""
+        df_with_duplicates = pd.DataFrame({
+            'col1': [1, 2, 3, 1, 2],
+            'col2': ['A', 'B', 'C', 'A', 'B']
+        })
+        
+        result = self.eda.overview(data=df_with_duplicates, printall=False)
+
+        # Should detect 2 duplicate rows
+        self.assertEqual(result['number of duplicates'].iloc[0], 2)
+
+    @patch('VKPyKit.EDA.display')
+    @patch('VKPyKit.EDA.HTML')
+    def test_overview_printall_false(self, mock_html, mock_display):
+        """Test overview with printall=False doesn't call display."""
+        result = self.eda.overview(data=self.df, printall=False)
+
+        # Should return DataFrame
+        self.assertIsInstance(result, pd.DataFrame)
+        
+        # Display should not be called when printall=False
+        mock_display.assert_not_called()
+        mock_html.assert_not_called()
+
+
+
 if __name__ == '__main__':
     unittest.main(argv=['first-arg-is-ignored'], exit=False)

@@ -24,8 +24,9 @@
 
 ## 📖 Overview
 
-VKPyKit is a production-ready Python package designed to streamline common Machine Learning and Data Science tasks. Built on top of industry-standard libraries like scikit-learn, pandas, matplotlib, and seaborn, it provides convenient wrapper functions and utilities for:
+VKPyKit is a production-ready Python package designed to streamline common Machine Learning and Data Science tasks. Built on top of industry-standard libraries like scikit-learn, pandas, matplotlib, seaborn, TensorFlow, and Keras, it provides convenient wrapper functions and utilities for:
 
+- **VKPy Utilities**: Core utility functions for reproducible ML experiments including seed management
 - **Exploratory Data Analysis (EDA)**: Comprehensive visualization and statistical analysis tools
 - **Decision Trees (DT)**: Model training, evaluation, and hyperparameter tuning
 - **Linear Regression (LR)**: Linear model building and performance assessment
@@ -34,6 +35,13 @@ VKPyKit is a production-ready Python package designed to streamline common Machi
 Instead of repeatedly writing the same boilerplate code across projects, VKPyKit packages these commonly-used functions into a reusable, well-tested library.
 
 ## ✨ Features
+
+### 🛠️ VKPy Utilities
+
+- **Seed Management**: Set random seeds across all major ML libraries (NumPy, TensorFlow, Keras, PyTorch)
+- **Reproducibility**: Ensure consistent results across multiple runs of your experiments
+- **Multi-Library Support**: Single function call to set seeds for all commonly used ML frameworks
+- **CUDA Support**: Automatic configuration for GPU-based PyTorch experiments
 
 ### 📊 Exploratory Data Analysis (EDA)
 
@@ -44,6 +52,8 @@ Instead of repeatedly writing the same boilerplate code across projects, VKPyKit
 - **Correlation Heatmaps**: Visualize feature correlations
 - **Pair Plots**: Comprehensive pairwise relationship visualization
 - **Target Distribution**: Analyze feature distributions across target classes
+- **Pivot Tables**: Generate comprehensive pivot tables with multiple statistics
+- **Data Overview**: Quick statistical summary and data quality assessment
 
 ### 🌲 Decision Trees (DT)
 
@@ -65,7 +75,10 @@ Instead of repeatedly writing the same boilerplate code across projects, VKPyKit
 - **Model Performance Metrics**: Comprehensive classification performance reporting for any sklearn classifier
 - **Confusion Matrices**: Visual confusion matrix generation with percentages
 - **Model Evaluation**: Accuracy, Precision, Recall, and F1-Score metrics
-- **Universal Compatibility**: Works with any scikit-learn classification model
+- **Feature Importance Visualization**: Plot and rank features by their importance scores
+- **Training History Tracking**: Visualize Keras/TensorFlow model training metrics over epochs
+- **End-to-End Model Execution**: Complete training, validation, and reporting pipeline for neural networks
+- **Universal Compatibility**: Works with any scikit-learn classification model and TensorFlow/Keras models
 
 ## 🚀 Installation
 
@@ -86,17 +99,21 @@ pip install -e .
 ### Requirements
 
 - Python >= 3.9
-- Dependencies: `numpy`, `pandas`, `scikit-learn`, `matplotlib`, `seaborn`, `openpyxl`, `plotly`
+- Dependencies: `numpy`, `pandas`, `scikit-learn`, `matplotlib`, `seaborn`, `openpyxl`, `plotly`, `tensorflow`, `keras`
 
 All dependencies will be automatically installed with the package.
 
 ## 🎯 Quick Start
 
 ```python
+from VKPyKit.VKPy import *
 from VKPyKit.EDA import *
 from VKPyKit.DT import *
 from VKPyKit.LR import *
 from VKPyKit.MLM import *
+
+# Set seeds for reproducibility across all ML libraries
+VKPy.setseed(42)
 
 # Quick EDA visualization
 EDA.histogram_boxplot_all(
@@ -124,6 +141,13 @@ MLM.model_performance_classification(
     title='My Classification Model'
 )
 
+# Plot feature importance
+MLM.plot_feature_importance(
+    model=my_model,
+    features=feature_names,
+    numberoftopfeatures=10
+)
+
 # Build a Linear Regression model
 LR.linear_regression_model(
     data=df,
@@ -135,6 +159,34 @@ LR.linear_regression_model(
 ```
 
 ## 📚 Documentation
+
+### VKPy Utilities
+
+#### Seed Management for Reproducibility
+
+Ensure consistent results across multiple runs of your ML experiments by setting random seeds for all major libraries:
+
+```python
+from VKPyKit.VKPy import *
+
+# Set seed for reproducibility across NumPy, TensorFlow, Keras, and PyTorch
+VKPy.setseed(42)
+
+# Now all random operations will be reproducible
+# This affects:
+# - NumPy random operations
+# - TensorFlow/Keras model initialization and training
+# - PyTorch model initialization and training (including CUDA operations)
+# - Python's built-in random module
+```
+
+**Benefits:**
+
+- ✅ Reproducible experiments across different runs
+- ✅ Consistent model initialization weights
+- ✅ Reliable train-test splits
+- ✅ Easier debugging and model comparison
+- ✅ GPU operations (CUDA) are also deterministic
 
 ### Exploratory Data Analysis (EDA)
 
@@ -222,6 +274,32 @@ EDA.pairplot_all(
 ```python
 # Visualize outliers across all numerical features
 EDA.boxplot_outliers(data=df)
+```
+
+#### Pivot Tables and Statistical Analysis
+
+```python
+# Generate comprehensive pivot tables with multiple statistics
+EDA.pivot_table_all(
+    data=df,
+    predictors=['category1', 'category2'],
+    target='numerical_target',
+    stats=['mean', 'median', 'count', 'std'],
+    figsize=(12, 10),
+    chart_type='bar',  # 'bar', 'line', or None
+    printall=True
+)
+```
+
+#### Quick Data Overview
+
+```python
+# Get a comprehensive statistical summary and data quality check
+EDA.overview(
+    data=df,
+    printall=True
+)
+# Displays: shape, data types, missing values, duplicates, and basic statistics
 ```
 
 ### Decision Trees (DT)
@@ -339,43 +417,160 @@ MLM.plot_confusion_matrix(
 )
 ```
 
+#### Feature Importance Visualization
+
+```python
+# Plot feature importance for tree-based models
+MLM.plot_feature_importance(
+    model=model,
+    features=X_train.columns.tolist(),
+    figsize=(10, 6),
+    numberoftopfeatures=15,  # Show top 15 features
+    title='Random Forest Feature Importance',
+    ignoreZeroImportance=True  # Hide features with zero importance
+)
+```
+
+#### Training History for Neural Networks
+
+```python
+from tensorflow import keras
+
+# Train a Keras model
+model = keras.Sequential([...])
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=50)
+
+# Plot training history
+MLM.model_history_plot(
+    history=history,
+    title='Neural Network Training'
+)
+
+# Plot specific metric
+MLM.model_history_plot(
+    history=history,
+    plot_metric='accuracy',
+    title='Model Accuracy Over Epochs'
+)
+```
+
+#### End-to-End Model Execution
+
+```python
+import tensorflow as tf
+from tensorflow import keras
+
+# Prepare data dictionary
+data = {
+    "X_train": X_train,
+    "y_train": y_train,
+    "X_val": X_val,
+    "y_val": y_val
+}
+
+# Define your model
+model = keras.Sequential([
+    keras.layers.Dense(64, activation='relu', input_shape=(X_train.shape[1],)),
+    keras.layers.Dropout(0.5),
+    keras.layers.Dense(32, activation='relu'),
+    keras.layers.Dense(1, activation='sigmoid')
+])
+
+# Execute complete training and evaluation pipeline
+results = MLM.execute_model(
+    model_in=model,
+    optimizer=keras.optimizers.Adam(learning_rate=0.001),
+    model_name='Binary Classifier',
+    data=data,
+    class_weights={0: 1, 1: 2},  # Handle class imbalance
+    loss_type=keras.losses.BinaryCrossentropy(),
+    optmization_metrics=[keras.metrics.BinaryAccuracy(), keras.metrics.Recall()],
+    threshold=0.5,
+    target_names=['Class 0', 'Class 1'],
+    epochs=50,
+    batch_size=32,
+    verbose=1,
+    print_model_summary=True,
+    activation='relu'
+)
+
+# Results DataFrame contains comprehensive metrics
+print(results[['ModelName', 'Validation_Accuracy', 'Validation_F1Score']])
+```
+
 ## 🛠️ API Reference
+
+### VKPy Class
+
+| Method          | Description                                                   |
+| --------------- | ------------------------------------------------------------- |
+| `setseed(seed)` | Set random seeds across NumPy, TensorFlow, Keras, and PyTorch |
 
 ### EDA Class
 
-| Method | Description |
-|--------|-------------|
-| `histogram_boxplot_all()` | Combined histogram and boxplot for all numerical features |
-| `barplot_stacked()` | Stacked bar chart for categorical variables |
-| `barplot_stacked_all()` | Multiple stacked bar charts |
-| `barplot_labeled()` | Bar plot with count/percentage labels |
-| `distribution_plot_for_target()` | Distribution analysis across target classes |
-| `distribution_plot_for_target_all()` | Multiple distribution analyses |
-| `boxplot_outliers()` | Outlier detection using boxplots |
-| `boxplot_dependent_category()` | Boxplot for dependent variables against categories |
-| `heatmap_all()` | Correlation heatmap |
-| `pairplot_all()` | Pairwise feature relationship plots |
+| Method                               | Description                                               |
+| ------------------------------------ | --------------------------------------------------------- |
+| `histogram_boxplot_all()`            | Combined histogram and boxplot for all numerical features |
+| `barplot_stacked()`                  | Stacked bar chart for categorical variables               |
+| `barplot_stacked_all()`              | Multiple stacked bar charts                               |
+| `barplot_labeled()`                  | Bar plot with count/percentage labels                     |
+| `distribution_plot_for_target()`     | Distribution analysis across target classes               |
+| `distribution_plot_for_target_all()` | Multiple distribution analyses                            |
+| `boxplot_outliers()`                 | Outlier detection using boxplots                          |
+| `boxplot_dependent_category()`       | Boxplot for dependent variables against categories        |
+| `heatmap_all()`                      | Correlation heatmap                                       |
+| `pairplot_all()`                     | Pairwise feature relationship plots                       |
+| `pivot_table_all()`                  | Generate pivot tables with multiple statistics            |
+| `overview()`                         | Quick statistical summary and data quality check          |
 
 ### DT Class
 
-| Method | Description |
-|--------|-------------|
+| Method                               | Description                       |
+| ------------------------------------ | --------------------------------- |
 | `model_performance_classification()` | Comprehensive performance metrics |
-| `plot_confusion_matrix()` | Visualize confusion matrix |
-| `tune_decision_tree()` | Automated hyperparameter tuning |
+| `plot_confusion_matrix()`            | Visualize confusion matrix        |
+| `tune_decision_tree()`               | Automated hyperparameter tuning   |
 
 ### LR Class
 
-| Method | Description |
-|--------|-------------|
+| Method                      | Description                                 |
+| --------------------------- | ------------------------------------------- |
 | `linear_regression_model()` | Build and evaluate linear regression models |
 
 ### MLM Class
 
-| Method | Description |
-|--------|-------------|
-| `model_performance_classification()` | Comprehensive performance metrics for any classifier |
-| `plot_confusion_matrix()` | Visualize confusion matrix with percentages |
+| Method                               | Description                                                                  |
+| ------------------------------------ | ---------------------------------------------------------------------------- |
+| `model_performance_classification()` | Comprehensive performance metrics for any classifier                         |
+| `plot_confusion_matrix()`            | Visualize confusion matrix with percentages                                  |
+| `plot_feature_importance()`          | Plot and display feature importance rankings with optional filtering         |
+| `model_history_plot()`               | Visualize Keras/TensorFlow training history (loss, accuracy, custom metrics) |
+| `execute_model()`                    | Complete end-to-end training, validation, and evaluation pipeline for Keras  |
+
+## 🧪 Testing
+
+VKPyKit includes a comprehensive test suite to ensure code quality and reliability. The test suite covers all major modules:
+
+- **EDA Module Tests** (`tests/test_EDA.py`): Tests for all exploratory data analysis functions
+- **DT Module Tests** (`tests/test_DT.py`): Tests for decision tree utilities
+- **LR Module Tests** (`tests/test_LR.py`): Tests for linear regression functions
+- **MLM Module Tests** (`tests/test_MLM.py`): Tests for machine learning model evaluation
+
+### Running Tests
+
+```bash
+# Install test dependencies
+pip install VKPyKit[test]
+
+# Run all tests
+pytest
+
+# Run tests with coverage report
+pytest --cov=VKPyKit
+```
+
+The test suite uses synthetic data generated via `conftest.py` to ensure reproducible and reliable testing.
 
 ## 🤝 Contributing
 
@@ -407,6 +602,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 🌟 Acknowledgments
 
 Built with:
+
 - [NumPy](https://numpy.org/)
 - [Pandas](https://pandas.pydata.org/)
 - [Scikit-learn](https://scikit-learn.org/)

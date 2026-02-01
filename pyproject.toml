@@ -31,7 +31,7 @@ name = "VKPyKit" # REQUIRED, is the only field that cannot be marked as dynamic.
 # https://packaging.python.org/guides/single-sourcing-package-version/
 #version = "0.0.1" # REQUIRED, although can be dynamic
 #dynamic = ["version"]
-version = "0.4.04"
+version = "0.4.11" # REQUIRED, although can be dynamic
 
 
 # This is a one-line description or tagline of what your project does. This
@@ -115,7 +115,9 @@ dependencies = [ "numpy",
                 "matplotlib", 
                 "seaborn", 
                 "openpyxl",
-                "plotly"
+                "plotly",
+                "tensorflow",
+                "keras",
                 ]
 
 # List additional groups of dependencies here (e.g. development
