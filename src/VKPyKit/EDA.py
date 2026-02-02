@@ -306,16 +306,20 @@ class EDA():
     
     @staticmethod
     # function to plot heatmap for all numerical features
-    def heatmap_all(data: pd.DataFrame, features: list = None) -> None:
+    def heatmap_all(data: pd.DataFrame, features: list = None, figsize: tuple[float, float] = None) -> None:
         """
         Plot heatmap for all numerical features\n
         data: dataframe \n
         return: None
         """
         # defining the size of the plot
-        plt.figure(figsize=(12, 7))
         if features is None:
             features = data.select_dtypes(include=['number']).columns.tolist()
+
+        if figsize is None:
+            figsize = (len(features), len(features))
+
+        plt.figure(figsize=figsize)
 
         # plotting the heatmap for correlation
         sns.heatmap(data[features].corr(),
@@ -481,9 +485,9 @@ class EDA():
         
         if printall: 
             print("-" * EDA.NUMBER_OF_DASHES)
-            display(HTML("<h4>Pivot table for all numerical features</h3>"))
+            display(HTML("<h2>Pivot table for all numerical features</h3>"))
             for pred in dict_pivot:
-                display(HTML(f"<h4>Pivot table for {target} for predictor: {pred} </h4>"))
+                display(HTML(f"<h4>Pivot table for {target} for {pred}</h4>"))
                 display(dict_pivot[pred])
                 if chart_type is not None:
                     dict_pivot[pred].drop('count', axis=1).T.plot(kind=chart_type, figsize=figsize)
@@ -509,3 +513,56 @@ class EDA():
         return dict_pivot
 
         # End of pivot_table_all function   
+    
+    @staticmethod
+    def overview(data: pd.DataFrame, printall: bool = True):
+
+        overview = pd.DataFrame(
+            {
+            'number of rows': data.shape[0] ,
+            'number of columns': data.shape[1] ,
+            'number of missing values': data.isnull().sum().sum(),
+            'number of duplicates': data.duplicated().sum().sum(),
+            },index=[0],
+        )
+        
+        if printall:
+            display(HTML("<h2>Overview of the dataset</h2>"))
+            display(data.info())
+
+            display(HTML("<h2>First 5 rows of the dataset</h2>"))
+            display(data.head())
+
+            display(HTML("<h2>Last 5 rows of the dataset</h2>"))
+            display(data.tail())
+
+            display(HTML("<h2>Summary statistics of the dataset</h2>"))
+            display(data.describe(include='all').T)
+
+            display(HTML("<h2>Missing values in the dataset</h2>"))
+            display(data.isnull().sum()[data.isnull().sum() > 0])
+
+            display(HTML("<h2>Duplicates in the dataset</h2>"))
+            display(data.duplicated().sum())
+
+            display(HTML("<h2>Memory Usage in bytes of the dataset</h2>"))
+            display(
+                pd.DataFrame(
+                    {
+                    'TotalBytes': data.memory_usage().sum(),
+                    'TotalMB': data.memory_usage().sum() / 1e6    ,
+                    'MB/row': data.memory_usage().sum() / 1e6 / data.shape[0],
+                    'MB/row %': data.memory_usage().sum() / 1e6 / data.shape[0] * 100,
+                },index=[0],)
+            )
+            
+
+            display(HTML("<h2>Overview of the dataset</h2>"))
+            display(overview)
+            print("-" * EDA.NUMBER_OF_DASHES)
+            
+        return overview
+    
+    # END OF overview function
+    
+# END OF EDA

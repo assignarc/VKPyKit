@@ -5,6 +5,4 @@ matplotlib
 seaborn
 scikit-learn
 ipython
-plotly.express
-tensorflow
-torch
+plotly.expres

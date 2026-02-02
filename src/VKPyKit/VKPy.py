@@ -1,9 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
 import random
-import tensorflow as tf
-import torch
-
 class VKPy:
 
     def __init__(self):
@@ -32,14 +29,22 @@ class VKPy:
         random.seed(VKPy.RANDOM_STATE)
         np.random.seed(VKPy.RANDOM_STATE)
 
-        # For TensorFlow/Keras
-        tf.random.set_seed(VKPy.RANDOM_STATE)
+        # For TensorFlow/Keras (if available)
+        try:
+            import tensorflow as tf
+            tf.random.set_seed(VKPy.RANDOM_STATE)
+        except ImportError:
+            pass  # TensorFlow not installed
 
-        # For PyTorch
-        torch.manual_seed(VKPy.RANDOM_STATE)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed(VKPy.RANDOM_STATE)
-            torch.cuda.manual_seed_all(VKPy.RANDOM_STATE)
-            torch.backends.cudnn.deterministic = True
-            torch.backends.cudnn.benchmark = False
+        # For PyTorch (if available)
+        try:
+            import torch
+            torch.manual_seed(VKPy.RANDOM_STATE)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed(VKPy.RANDOM_STATE)
+                torch.cuda.manual_seed_all(VKPy.RANDOM_STATE)
+                torch.backends.cudnn.deterministic = True
+                torch.backends.cudnn.benchmark = False
+        except ImportError:
+            pass  # PyTorch not installed
         

@@ -303,49 +303,7 @@ class DT():
         }
 
         # END OF TUNE DECISION TREE FUNCTION
-    @staticmethod
-    def plot_feature_importance(model: DecisionTreeClassifier,
-                                features: list,
-                                figsize: tuple[float, float] = (10, 6),
-                                numberoftopfeatures: int = None,
-                                title: str = '',
-                                ignoreZeroImportance: bool = False,
-                                ) -> None:
-        """
-        Plot feature importance for a given model and feature names
-
-        model: trained model with feature_importances_ attribute \n
-        feature_names: list of feature names    \n
-        figsize: size of the figure (default (10,6)) \n
-        numberoftopfeatures: number of top features to display (default None, i.e., display all features) \n
-        return: None
-        """
-
-        df_importance = pd.DataFrame({
-            'Feature': features,
-            'Importance': model.feature_importances_
-        }).sort_values(by='Importance', ascending=False)
-
-        if numberoftopfeatures:
-            df_importance.head(numberoftopfeatures, inplace=True)
-
-        if ignoreZeroImportance:
-            df_importance = df_importance[df_importance['Importance'] > 0]
-
-        display(df_importance)
-
-        plt.figure(figsize=figsize)
-        sns.barplot(x='Importance',
-                    y='Feature',
-                    data=df_importance,
-                    palette='viridis')
-        plt.title('Feature and their Importance Scores : ' + title)
-        plt.xlabel('Importance Score')
-        plt.ylabel('Features')
-        plt.show()
-        sys.stdout.flush()
-
-        # END OF PLOT FEATURE IMPORTANCE FUNCTION
+    
     @staticmethod
     def visualize_decision_tree(model: DecisionTreeClassifier,
                                 features: list,
