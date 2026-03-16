@@ -4,9 +4,6 @@ import pandas as pd
 import numpy as np
 import sys
 
-from sklearn import tree
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import f1_score, accuracy_score, recall_score, precision_score, confusion_matrix
 from IPython.display import display, HTML
 # To ignore unnecessary warnings
 import warnings
@@ -432,7 +429,7 @@ class EDA():
     @staticmethod
     # function to plot labeled bar chart for all predictors
     def barplot_labeled_all(data: pd.DataFrame, predictors: list[str],
-                            target: str) -> None:
+                            target: str = None) -> None:
         """
         data: dataframe \n
         predictor: List of Independent variables \n
@@ -447,7 +444,7 @@ class EDA():
                 HTML(
                     f"<h3>Labeled barplot for {target} for predictor: {pred} </h>"
                 ))
-            EDA.barplot_labeled(data, pred, target)
+            EDA.barplot_labeled(data, pred)
             print("-" * EDA.NUMBER_OF_DASHES)
 
         # End of barplot_labeled_all function
@@ -515,8 +512,7 @@ class EDA():
         # End of pivot_table_all function   
     
     @staticmethod
-    def overview(data: pd.DataFrame, printall: bool = True):
-
+    def overview(data: pd.DataFrame, printall: bool = True) -> pd.DataFrame:
         overview = pd.DataFrame(
             {
             'number of rows': data.shape[0] ,
@@ -555,6 +551,8 @@ class EDA():
                     'MB/row %': data.memory_usage().sum() / 1e6 / data.shape[0] * 100,
                 },index=[0],)
             )
+
+            EDA.barplot_labeled_all(data, predictors = data.select_dtypes(exclude=['number']).columns.tolist())
             
 
             display(HTML("<h2>Overview of the dataset</h2>"))
@@ -564,5 +562,32 @@ class EDA():
         return overview
     
     # END OF overview function
-    
+
+    @staticmethod
+    def plot_images(images: np.ndarray, 
+                    labels: pd.DataFrame, 
+                    rows: int = 3, 
+                    cols: int = 4) -> None:
+        """
+        Plot images from the dataset\n
+        images: numpy array of images\n
+        labels: dataframe of labels\n
+        rows: number of rows to plot (default 3)\n
+        cols: number of columns to plot (default 4)\n
+        return: None
+        """
+        keys=dict(labels['Label'])
+ 
+        fig = plt.figure(figsize=(cols*3.5, rows *3.5))
+        for i in range(cols):
+            for j in range(rows):
+                random_index = np.random.randint(0, len(labels))
+                ax = fig.add_subplot(rows, cols, i * rows + j + 1)
+                ax.imshow(images[random_index, :])
+                ax.set_title(keys[random_index])
+        plt.show()
+        sys.stdout.flush()
+    # END OF plot_images function
+
+
 # END OF EDA

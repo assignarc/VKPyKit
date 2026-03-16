@@ -28,8 +28,8 @@ VKPyKit is a production-ready Python package designed to streamline common Machi
 
 - **VKPy Utilities**: Core utility functions for reproducible ML experiments including seed management
 - **Exploratory Data Analysis (EDA)**: Comprehensive visualization and statistical analysis tools
-- **Decision Trees (DT)**: Model training, evaluation, and hyperparameter tuning
-- **Linear Regression (LR)**: Linear model building and performance assessment
+- **Decision Trees (DT)**: Model training, evaluation, hyperparameter tuning, pruning, and tree visualization
+- **Linear Regression (LR)**: Regression model performance assessment with multiple metrics
 - **Machine Learning Models (MLM)**: General classification model performance evaluation and visualization
 
 Instead of repeatedly writing the same boilerplate code across projects, VKPyKit packages these commonly-used functions into a reusable, well-tested library.
@@ -54,27 +54,29 @@ Instead of repeatedly writing the same boilerplate code across projects, VKPyKit
 - **Target Distribution**: Analyze feature distributions across target classes
 - **Pivot Tables**: Generate comprehensive pivot tables with multiple statistics
 - **Data Overview**: Quick statistical summary and data quality assessment
+- **Image Grid Display**: Plot a random sample of images from a dataset with labels
 
 ### 🌲 Decision Trees (DT)
 
 - **Model Performance Metrics**: Comprehensive classification performance reporting
 - **Confusion Matrices**: Visual confusion matrix generation with customization
-- **Hyperparameter Tuning**: Automated grid search for optimal decision tree parameters
-- **Cross-Validation**: Built-in validation strategies
+- **Tree Visualization**: Render decision tree structure with optional text rules and feature importance
+- **Hyperparameter Tuning**: Automated grid search for optimal decision tree parameters (returns model or full results dict)
+- **Pre-Pruning**: Grid search with automated visualization and train/test evaluation
+- **Post-Pruning**: Cost-complexity pruning path analysis with F1-score optimization
 - **Feature Importance**: Analyze and visualize feature contributions
 
 ### 📈 Linear Regression (LR)
 
-- **Model Building**: Streamlined linear regression model creation
-- **Performance Evaluation**: R², RMSE, MAE, and other regression metrics
-- **Residual Analysis**: Automated residual plotting and diagnostics
-- **Model Comparison**: Compare multiple regression models
+- **Performance Evaluation**: R², Adjusted R², RMSE, MAE, and MAPE regression metrics
+- **MAPE Score**: Mean Absolute Percentage Error utility
+- **Adjusted R²**: Penalized R² accounting for number of predictors
 
 ### 🤖 Machine Learning Models (MLM)
 
 - **Model Performance Metrics**: Comprehensive classification performance reporting for any sklearn classifier
-- **Confusion Matrices**: Visual confusion matrix generation with percentages
-- **Model Evaluation**: Accuracy, Precision, Recall, and F1-Score metrics
+- **Confusion Matrices**: Visual confusion matrix generation with percentages and optional binary threshold conversion
+- **Model Evaluation**: Accuracy, Precision, Recall, and F1-Score metrics; supports `argmax` for multi-class outputs
 - **Feature Importance Visualization**: Plot and rank features by their importance scores
 - **Training History Tracking**: Visualize Keras/TensorFlow model training metrics over epochs
 - **End-to-End Model Execution**: Complete training, validation, and reporting pipeline for neural networks
@@ -126,8 +128,8 @@ EDA.histogram_boxplot_all(
 # Train and evaluate a Decision Tree
 DT.model_performance_classification(
     model=my_dt_classifier,
-    X=X_test,
-    y=y_test,
+    predictors=X_test,
+    expected=y_test,
     printall=True,
     title='Customer Churn Model'
 )
@@ -148,13 +150,11 @@ MLM.plot_feature_importance(
     numberoftopfeatures=10
 )
 
-# Build a Linear Regression model
-LR.linear_regression_model(
-    data=df,
-    predictors=['feature1', 'feature2', 'feature3'],
-    target='target_variable',
-    printall=True,
-    title='Sales Prediction Model'
+# Evaluate a regression model
+LR.model_performance_regression(
+    model=my_lr_model,
+    predictors=X_test,
+    target=y_test
 )
 ```
 
@@ -208,6 +208,15 @@ EDA.histogram_boxplot_all(
     bins=10,
     kde=True
 )
+
+# Generate histogram and boxplot for a single feature
+EDA.histogram_boxplot(
+    data=df,
+    feature='age',
+    figsize=(12, 7),
+    kde=True,
+    bins=20
+)
 ```
 
 #### Stacked Bar Plots
@@ -226,6 +235,25 @@ EDA.barplot_stacked(
 EDA.barplot_stacked_all(
     data=df,
     predictors=['cat_col1', 'cat_col2', 'cat_col3'],
+    target='target_column'
+)
+```
+
+#### Labeled Bar Plots
+
+```python
+# Single labeled bar plot (with optional percentage display)
+EDA.barplot_labeled(
+    data=df,
+    feature='category_column',
+    percentages=True,
+    category_levels=10  # show top 10 levels only
+)
+
+# Multiple labeled bar plots for a list of predictors
+EDA.barplot_labeled_all(
+    data=df,
+    predictors=['cat_col1', 'cat_col2'],
     target='target_column'
 )
 ```
@@ -274,6 +302,14 @@ EDA.pairplot_all(
 ```python
 # Visualize outliers across all numerical features
 EDA.boxplot_outliers(data=df)
+
+# Boxplot for a dependent variable against multiple categories
+EDA.boxplot_dependent_category(
+    data=df,
+    dependent='price',
+    independent=['brand', 'category'],
+    figsize=(12, 5)
+)
 ```
 
 #### Pivot Tables and Statistical Analysis
@@ -299,7 +335,19 @@ EDA.overview(
     data=df,
     printall=True
 )
-# Displays: shape, data types, missing values, duplicates, and basic statistics
+# Displays: shape, data types, missing values, duplicates, basic statistics, and memory usage
+```
+
+#### Image Grid Display
+
+```python
+# Plot a sample grid of images with their labels
+EDA.plot_images(
+    images=image_array,   # numpy array of images
+    labels=labels_df,     # DataFrame with 'Label' column
+    rows=3,
+    cols=4
+)
 ```
 
 ### Decision Trees (DT)
@@ -321,8 +369,8 @@ model.fit(X_train, y_train)
 # Evaluate performance
 DT.model_performance_classification(
     model=model,
-    X=X_test,
-    y=y_test,
+    predictors=X_test,
+    expected=y_test,
     printall=True,
     title='Decision Tree Classifier Performance'
 )
@@ -334,17 +382,31 @@ DT.model_performance_classification(
 # Plot confusion matrix
 DT.plot_confusion_matrix(
     model=model,
-    X=X_test,
-    y=y_test,
+    predictors=X_test,
+    expected=y_test,
     title='Confusion Matrix - Decision Tree'
+)
+```
+
+#### Tree Visualization
+
+```python
+# Visualize the tree structure with optional text rules + feature importance
+DT.visualize_decision_tree(
+    model=model,
+    features=X_train.columns.tolist(),
+    classes=['No', 'Yes'],
+    figsize=(20, 10),
+    showtext=True,        # print text rules
+    showimportance=True   # plot feature importance
 )
 ```
 
 #### Hyperparameter Tuning
 
 ```python
-# Automated hyperparameter tuning with grid search
-best_params, results_df = DT.tune_decision_tree(
+# Returns best DecisionTreeClassifier model
+best_model = DT.tune_decision_tree(
     X_train=X_train,
     y_train=y_train,
     X_test=X_test,
@@ -357,24 +419,87 @@ best_params, results_df = DT.tune_decision_tree(
     sortbyAscending=False
 )
 
-print(f"Best parameters: {best_params}")
+# Returns a full results dictionary (scores df, tuned model scores df, and best model)
+results = DT.tune_decision_tree_results(
+    X_train=X_train,
+    y_train=y_train,
+    X_test=X_test,
+    y_test=y_test,
+    max_depth_v=(2, 11, 2),
+    max_leaf_nodes_v=(10, 51, 10),
+    min_samples_split_v=(10, 51, 10),
+    printall=True,
+    sortresultby=['F1Difference'],
+    sortbyAscending=False,
+    metrictooptimize='F1Difference'   # 'Accuracy', 'Recall', 'Precision', 'F1', 'F1Difference', 'RecallDifference'
+)
+
+print(results['scores'])            # All combinations
+print(results['tuned_model_scores']) # Best combination
+best_model = results['model']
+```
+
+#### Pre-Pruning
+
+```python
+# Run grid search, visualize best tree, and evaluate on train/test
+prepruning_results = DT.prepruning_nodes_samples_split(
+    X_train=X_train,
+    y_train=y_train,
+    X_test=X_test,
+    y_test=y_test,
+    max_depth_v=(2, 9, 2),
+    max_leaf_nodes_v=(50, 250, 50),
+    min_samples_split_v=(10, 70, 10),
+    printall=True,
+    sortresultby='F1',
+    sortbyAscending=False
+)
+
+model = prepruning_results['model']
+train_perf = prepruning_results['prepruning_train_perf']
+test_perf  = prepruning_results['prepruning_test_perf']
+```
+
+#### Post-Pruning (Cost-Complexity)
+
+```python
+# Analyze the cost-complexity path and select the best alpha
+postpruning_results = DT.postpruning_cost_complexity(
+    X_train=X_train,
+    y_train=y_train,
+    X_test=X_test,
+    y_test=y_test,
+    printall=True,
+    figsize=(10, 6)
+)
+
+model = postpruning_results['model']
+train_perf = postpruning_results['postpruning_train_perf']
+test_perf  = postpruning_results['postpruning_test_perf']
 ```
 
 ### Linear Regression (LR)
 
-#### Build and Evaluate a Linear Regression Model
+#### Evaluate a Regression Model
 
 ```python
 from VKPyKit.LR import *
 
-# Train and evaluate linear regression
-LR.linear_regression_model(
-    data=df,
-    predictors=['feature1', 'feature2', 'feature3'],
-    target='target_variable',
-    printall=True,
-    title='House Price Prediction Model'
+# Computer comprehensive regression metrics (RMSE, MAE, MAPE, R², Adj R²)
+perf_df = LR.model_performance_regression(
+    model=my_lr_model,
+    predictors=X_test,
+    target=y_test
 )
+print(perf_df)
+# Returns DataFrame with: RMSE, MAE, MAPE, R-squared, Adj R-squared
+
+# Utility: MAPE score
+mape = LR.mape_score(targets=y_test, predictions=y_pred)
+
+# Utility: Adjusted R² score
+adj_r2 = LR.adj_r2_score(predictors=X_test, targets=y_test, predictions=y_pred)
 ```
 
 ### Machine Learning Models (MLM)
@@ -400,8 +525,11 @@ MLM.model_performance_classification(
     model=model,
     predictors=X_test,
     expected=y_test,
+    threshold=0.5,           # threshold for binary classification
+    score_average='binary',  # 'binary', 'macro', 'weighted', etc.
     printall=True,
-    title='Random Forest Classifier'
+    title='Random Forest Classifier',
+    idmax=False              # set True for multi-class models using argmax
 )
 ```
 
@@ -413,6 +541,8 @@ MLM.plot_confusion_matrix(
     model=model,
     predictors=X_test,
     expected=y_test,
+    convert_pred_to_binary=False,  # set True to threshold continuous predictions
+    threshold=0.5,
     title='Random Forest - Confusion Matrix'
 )
 ```
@@ -441,13 +571,13 @@ model = keras.Sequential([...])
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 history = model.fit(X_train, y_train, validation_data=(X_val, y_val), epochs=50)
 
-# Plot training history
+# Plot all metrics in training history
 MLM.model_history_plot(
     history=history,
     title='Neural Network Training'
 )
 
-# Plot specific metric
+# Plot a specific metric only
 MLM.model_history_plot(
     history=history,
     plot_metric='accuracy',
@@ -511,42 +641,52 @@ print(results[['ModelName', 'Validation_Accuracy', 'Validation_F1Score']])
 
 | Method                               | Description                                               |
 | ------------------------------------ | --------------------------------------------------------- |
+| `histogram_boxplot()`                | Combined histogram and boxplot for a single feature       |
 | `histogram_boxplot_all()`            | Combined histogram and boxplot for all numerical features |
-| `barplot_stacked()`                  | Stacked bar chart for categorical variables               |
-| `barplot_stacked_all()`              | Multiple stacked bar charts                               |
-| `barplot_labeled()`                  | Bar plot with count/percentage labels                     |
-| `distribution_plot_for_target()`     | Distribution analysis across target classes               |
-| `distribution_plot_for_target_all()` | Multiple distribution analyses                            |
-| `boxplot_outliers()`                 | Outlier detection using boxplots                          |
-| `boxplot_dependent_category()`       | Boxplot for dependent variables against categories        |
+| `barplot_stacked()`                  | Stacked bar chart for a single categorical variable       |
+| `barplot_stacked_all()`              | Multiple stacked bar charts for a list of predictors      |
+| `barplot_labeled()`                  | Bar plot with count/percentage labels for a single feature|
+| `barplot_labeled_all()`              | Labeled bar plots for a list of categorical predictors    |
+| `distribution_plot_for_target()`     | Distribution analysis across target classes (single)      |
+| `distribution_plot_for_target_all()` | Distribution analysis across target classes (multiple)    |
+| `boxplot_outliers()`                 | Outlier detection boxplots for all numerical features     |
+| `boxplot_dependent_category()`       | Boxplot for a dependent variable vs. category features    |
 | `heatmap_all()`                      | Correlation heatmap                                       |
 | `pairplot_all()`                     | Pairwise feature relationship plots                       |
 | `pivot_table_all()`                  | Generate pivot tables with multiple statistics            |
 | `overview()`                         | Quick statistical summary and data quality check          |
+| `plot_images()`                      | Display a random sample grid of images with labels        |
 
 ### DT Class
 
-| Method                               | Description                       |
-| ------------------------------------ | --------------------------------- |
-| `model_performance_classification()` | Comprehensive performance metrics |
-| `plot_confusion_matrix()`            | Visualize confusion matrix        |
-| `tune_decision_tree()`               | Automated hyperparameter tuning   |
+| Method                               | Description                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------ |
+| `model_performance_classification()` | Comprehensive performance metrics (Accuracy, Recall, Precision, F1)      |
+| `plot_confusion_matrix()`            | Visualize confusion matrix with counts and percentages                   |
+| `visualize_decision_tree()`          | Render tree structure; optionally show text rules and feature importance  |
+| `tune_decision_tree()`               | Grid search tuning — returns best `DecisionTreeClassifier` model         |
+| `tune_decision_tree_results()`       | Grid search tuning — returns dict of scores, tuned scores, and model     |
+| `prepruning_nodes_samples_split()`   | Pre-pruning via grid search with full train/test evaluation              |
+| `postpruning_cost_complexity()`      | Post-pruning via cost-complexity path; selects best alpha by test F1     |
+| `plot_feature_importance()`          | Visualize feature importance scores                                      |
 
 ### LR Class
 
-| Method                      | Description                                 |
-| --------------------------- | ------------------------------------------- |
-| `linear_regression_model()` | Build and evaluate linear regression models |
+| Method                        | Description                                              |
+| ----------------------------- | -------------------------------------------------------- |
+| `model_performance_regression()` | Compute RMSE, MAE, MAPE, R², and Adjusted R² metrics |
+| `mape_score()`                | Compute Mean Absolute Percentage Error                   |
+| `adj_r2_score()`              | Compute Adjusted R² given predictors, targets, preds     |
 
 ### MLM Class
 
-| Method                               | Description                                                                  |
-| ------------------------------------ | ---------------------------------------------------------------------------- |
-| `model_performance_classification()` | Comprehensive performance metrics for any classifier                         |
-| `plot_confusion_matrix()`            | Visualize confusion matrix with percentages                                  |
-| `plot_feature_importance()`          | Plot and display feature importance rankings with optional filtering         |
-| `model_history_plot()`               | Visualize Keras/TensorFlow training history (loss, accuracy, custom metrics) |
-| `execute_model()`                    | Complete end-to-end training, validation, and evaluation pipeline for Keras  |
+| Method                               | Description                                                                         |
+| ------------------------------------ | ----------------------------------------------------------------------------------- |
+| `model_performance_classification()` | Comprehensive performance metrics for any classifier; supports threshold and argmax |
+| `plot_confusion_matrix()`            | Visualize confusion matrix with percentages; supports binary threshold conversion   |
+| `plot_feature_importance()`          | Plot and display feature importance rankings with optional filtering                |
+| `model_history_plot()`               | Visualize Keras/TensorFlow training history (loss, accuracy, custom metrics)        |
+| `execute_model()`                    | Complete end-to-end training, validation, and evaluation pipeline for Keras         |
 
 ## 🧪 Testing
 
@@ -616,7 +756,7 @@ Built with:
 
 **[⬆ Back to Top](#-vkpykit)**
 
-Made with ❤️ by [Vishal Khapre](https://github.com/assignarc)
+Made by [Vishal Khapre](https://github.com/assignarc)
 
 If you find VKPyKit useful, please consider giving it a ⭐ on [GitHub](https://github.com/assignarc/VKPyKit)!
 

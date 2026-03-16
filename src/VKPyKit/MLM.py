@@ -84,7 +84,9 @@ class MLM():
             threshold: float = 0.0,
             score_average: str = 'binary',
             printall: bool = False,
-            title: str = 'DecisionTreeClassifier') -> pd.DataFrame:
+            title: str = 'DecisionTreeClassifier',
+            idmax :bool = False
+            ) -> pd.DataFrame:
         """
         Function to compute different metrics to check classification model performance
         model: classifier \n
@@ -94,7 +96,13 @@ class MLM():
         """
 
         # predicting using the independent variables
-        predictions = model.predict(predictors) > threshold
+        if idmax:
+            predictions = model.predict(predictors).argmax(axis=1)
+            expected = expected.argmax(axis=1)
+        else:
+            predictions = model.predict(predictors) > threshold
+        
+
 
         accuracy = metrics.accuracy_score(expected, predictions)  # to compute Accuracy
         recall = metrics.recall_score(expected, predictions, average=score_average)  # to compute Recall
