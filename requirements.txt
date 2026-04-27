@@ -5,4 +5,8 @@ matplotlib
 seaborn
 scikit-learn
 ipython
-plotly.expres
+plotly
+opencv-python
+opencv-contrib-python
+torch
+keras

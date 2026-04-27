@@ -3,20 +3,18 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 import sys
-
+from VKPyKit.VKPy import *
 from IPython.display import display, HTML
+from scipy.stats import pearsonr  
 # To ignore unnecessary warnings
 import warnings
 warnings.filterwarnings("ignore")
 
 
-class EDA():
+class EDA(VKPy):
 
     def __init__(self):
         pass
-    
-    RANDOM_STATE = 42
-    NUMBER_OF_DASHES = 100
 
     """
     To plot simple EDA visualizations
@@ -588,6 +586,59 @@ class EDA():
         plt.show()
         sys.stdout.flush()
     # END OF plot_images function
+
+    @staticmethod 
+    def scattterplot(data: pd.DataFrame, feature: str, target: str, figsize: tuple[int, int] = (6, 4)) -> None:
+        """
+        Generate a scatter plot between a numeric feature and the target variable,
+        including the Pearson correlation coefficient in the title.
+
+        Parameters:
+        data (DataFrame): The dataset
+        feature (str): The numeric column to plot against the target
+        target (str): The target variable 
+        return: None
+        """
+        plot_data = data[[feature, target]].dropna() 
+
+        corr_coef, _ = pearsonr(plot_data[feature], plot_data[target])
+
+        
+        display(HTML(f"<h4>Scatter plot for {feature} vs {target}</h4>"))    
+        plt.figure(figsize=figsize)
+        sns.scatterplot(data=plot_data, x=feature, y=target, alpha=0.6)
+        plt.title(f'{feature} vs {target}\n(Pearson r = {corr_coef:.2f})')
+        plt.xlabel(feature)
+        plt.ylabel(target)
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+        sys.stdout.flush()
+        print("-" * EDA.NUMBER_OF_DASHES)
+
+
+    @staticmethod 
+    def scattterplot_all(data: pd.DataFrame, target: str, figsize: tuple[int, int] = (6, 4)) -> None:
+        """
+        Generate a scatter plot between a numeric feature and the target variable,
+        including the Pearson correlation coefficient in the title.
+
+        Parameters:
+        data (DataFrame): The dataset
+        target (str): The target variable 
+        return: None
+        """
+
+        display(HTML(f"<h4>Scatter plot for {target}</h4>"))    
+        predictors = data.select_dtypes(include=['number']).columns.tolist()
+        for feature in predictors:
+            if feature == target:
+                continue
+            EDA.scattterplot(data, feature, target, figsize=figsize)
+            sys.stdout.flush()
+        
+        print("-" * EDA.NUMBER_OF_DASHES)
+
 
 
 # END OF EDA
