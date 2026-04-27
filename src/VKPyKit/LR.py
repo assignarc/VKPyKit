@@ -1,30 +1,18 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 import numpy as np
-
-from sklearn import tree
-from sklearn.tree import DecisionTreeClassifier
+from VKPyKit.VKPy import *
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-# to split the data into train and test sets
-from sklearn.model_selection import train_test_split
-# to build a linear regression model
-from sklearn.linear_model import LinearRegression
 
 from IPython.display import display, HTML
-import plotly.express as px
 import warnings
 warnings.filterwarnings("ignore")
 
 
-class LR():
+class LR(VKPy):
 
     def __init__(self):
         pass
     
-    RANDOM_STATE = 42
-    NUMBER_OF_DASHES = 100
-
    
     """
     To plot simple LR visualizations

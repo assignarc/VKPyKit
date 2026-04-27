@@ -3,7 +3,7 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 import sys
-
+from VKPyKit.VKPy import *
 from sklearn import tree, metrics
 from sklearn.tree import DecisionTreeClassifier
 from IPython.display import display, HTML
@@ -12,15 +12,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-class DT():
+class DT(VKPy):
 
     def __init__(self): 
         super().__init__()
         pass
     
-
-    RANDOM_STATE = 42
-    NUMBER_OF_DASHES = 100
 
     """
     Decision Tree Classifier related visualizations
@@ -93,14 +90,14 @@ class DT():
                     y_test_pred = estimator.predict(X_test)
 
                     # calculate F1 scores for training and test sets
-                    train_f1_score = f1_score(y_train, y_train_pred)
-                    test_f1_score = f1_score(y_test, y_test_pred)
+                    train_f1_score = metrics.f1_score(y_train, y_train_pred)
+                    test_f1_score = metrics.f1_score(y_test, y_test_pred)
                     # calculate the absolute difference between training and test F1 scores
                     scoreF1Difference = abs(train_f1_score - test_f1_score)
 
                     # Calculate recall scores for training and test sets
-                    train_recall_score = recall_score(y_train, y_train_pred)
-                    test_recall_score = recall_score(y_test, y_test_pred)
+                    train_recall_score = metrics.recall_score(y_train, y_train_pred)
+                    test_recall_score = metrics.recall_score(y_test, y_test_pred)
                     # Calculate the absolute difference between training and test recall scores
                     scoreRecallDifference = abs(train_recall_score -
                                                 test_recall_score)
@@ -588,7 +585,7 @@ class DT():
             pred_train = decisionTreeClassifier.predict(X_train)
 
             # Calculate the F1 score for the training set predictions compared to true labels
-            f1_train = f1_score(y_train, pred_train)
+            f1_train = metrics.f1_score(y_train, pred_train)
 
             # Append the calculated F1 score to the train_f1_scores list
             train_f1_scores.append(f1_train)
@@ -602,7 +599,7 @@ class DT():
             pred_test = decisionTreeClassifier.predict(X_test)
 
             # Calculate the F1 score for the test set predictions compared to true labels
-            f1_test = f1_score(y_test, pred_test)
+            f1_test = metrics.f1_score(y_test, pred_test)
 
             # Append the calculated F1 score to the test_f1_scores list
             test_f1_scores.append(f1_test)

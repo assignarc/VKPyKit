@@ -3,11 +3,9 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 import sys
-
-from sklearn import tree, metrics
-from sklearn.tree import DecisionTreeClassifier
+from VKPyKit.VKPy import *
+from sklearn import metrics
 from IPython.display import display, HTML
-from sklearn.metrics import classification_report, confusion_matrix
 
 import tensorflow as tf
 import warnings
@@ -16,7 +14,7 @@ warnings.filterwarnings("ignore")
 import time
 
 
-class MLM():
+class MLM(VKPy):
     
     def __init__(self): 
         super().__init__()
@@ -191,7 +189,7 @@ class MLM():
         if plot_metric is not None:
             metrics = [plot_metric]
         else:
-            metrics = filtered_list = list(filter(lambda item: not item.startswith('val_'), history.history.keys()))
+            metrics = list(filter(lambda item: not item.startswith('val_'), history.history.keys()))
  
         for metric in metrics:
             # Print maximum values for each metric
@@ -262,7 +260,7 @@ class MLM():
         if print_model_summary:
 
             #Collect Classification Reports - Train
-            model_in_cr_train = classification_report(data["y_train"],model_y_train_pred>threshold,output_dict=True, digits=4, target_names=target_names)
+            model_in_cr_train = metrics.classification_report(data["y_train"],model_y_train_pred>threshold,output_dict=True, digits=4, target_names=target_names)
             # Convert to DataFrame
             report_df = pd.DataFrame(model_in_cr_train).transpose()
             # Apply a background gradient to highlight performance
@@ -275,7 +273,7 @@ class MLM():
             plt.show()
             
             # Visualize using Seaborn - Validation
-            model_in_cr_val = classification_report(data["y_val"],model_y_val_pred>threshold,output_dict=True, digits=4, target_names=target_names)
+            model_in_cr_val = metrics.classification_report(data["y_val"],model_y_val_pred>threshold,output_dict=True, digits=4, target_names=target_names)
             # Convert to DataFrame
             report_df = pd.DataFrame(model_in_cr_val).transpose()
             # Apply a background gradient to highlight performance
